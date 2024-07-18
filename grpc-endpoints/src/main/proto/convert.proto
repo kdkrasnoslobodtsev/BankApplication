@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package converter;
+
+service Converter {
+  rpc Convert (ConvertRequest) returns (ConvertResponse);
+}
+
+message ConvertRequest {
+  string from = 1;
+  string to = 2;
+  double amount = 3;
+}
+
+message ConvertResponse {
+    double amount = 1;
+}
+

@@ -1,21 +1,34 @@
-# Дз 6
+# Дз 7
 
-В `converter` добавить обработку ошибок со стороны `rates`. 
-Если запрос `GET /rates` упал - сделать еще 3 ретрая. Через 50мс, 100мс и 150мс. 
-(50мс между оригинальным запросом и первым ретраем, 100мс между 1 и 2 ретраями, 150мс - между 2 и 3 ретраями)
-Если все повторные запросы тоже упали - возвращать ошибку с кодом 500
+В `accounts` при изменении денег на счету (пополнение и перевод) отправлять уведомление 
 
+Метод `POST /notification`
 
-В `accounts` добавить circuit breaker ан grpc вызов конвертера.
-CB должен открываться, если более 50% запросов за минуту заканчиваются ошибкой, минимальное количество запросов для открытия - 10.
-Переходить в half-open через 10 секунд. Количество запросов для перехода в closed из half-open - 3
+Сообщение должно быть формата `"Счет ${номер счета}. Операция: ${сумма операции}. Баланс: ${баланс после операции}"`
 
-В `accounts` на запрос `/customers/{customerId}/balance добавить rate limit. 5 запросов в минуту на каждого пользователя (customerId)
+Примеры:
+```json
+{
+  "customerId": 1,
+  "message": "Счет 123. Операция: +900. Баланс: 900"
+}
+```
 
+```json
+{
+  "customerId": 1,
+  "message": "Счет 123. Операция: -200. Баланс: 700"
+}
+```
 
+Отправку уведомлений реализовать через transactional outbox паттерн. 
+Учесть, что accounts может быть развернуть в нескольких экземплярах
 
 
 # Тестирование
+
+Новые переменные окружения:
+* **NOTIFICATION_SERVICE_URL** - url к сервису для отправки пушей
 
 В свой воркфлоу сборки добавить новую джобу
 
@@ -23,7 +36,7 @@ CB должен открываться, если более 50% запросов
 jobs:
   autotest:
     needs: $build_job_name # имя вашей основной джобы сборки
-    uses: central-university-dev/hse-ab-cicd-hw/.github/workflows/autotests-hw6.yml@main
+    uses: central-university-dev/hse-ab-cicd-hw/.github/workflows/autotests-hw7.yml@main
     with:
       chart-path: ./rates # путь к чарту из второй дз
       converter-image-name: foo/bar-converter # имя образа вашего приложения
@@ -35,6 +48,5 @@ jobs:
 
 # Материалы
 
-https://github.com/MarcGiffing/bucket4j-spring-boot-starter
-https://www.baeldung.com/resilience4j
-https://www.baeldung.com/spring-retry
+https://habr.com/ru/companies/lamoda/articles/678932/
+https://microservices.io/patterns/data/transactional-outbox.html
